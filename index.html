@@ -1,1 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur de Trading Avancé</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a202c;
+            color: #f7fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #63b3ed;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .panels {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .panel {
+            background-color: #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            border: 1px solid #4a5568;
+        }
+        #portfolio-panel {
+            width: 30%;
+            min-width: 250px;
+        }
+        #market-panel {
+            width: 65%;
+            min-width: 300px;
+        }
+        #transactions-panel {
+            width: 100%;
+            margin-top: 20px;
+        }
+        h2 {
+            color: #a0aec0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #718096;
+            padding-bottom: 10px;
+        }
+        #cash {
+            font-size: 1.2em;
+            color: #f56565;
+        }
+        #holdings {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #holdings li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #4a5568;
+            border-radius: 4px;
+            border: 1px solid #718096;
+        }
+        #stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: #374151;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #stock-table thead th {
+            background-color: #4a5568;
+            color: #cbd5e0;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #718096;
+        }
+        #stock-table tbody tr {
+            border-bottom: 1px solid #718096;
+        }
+        #stock-table tbody tr:hover {
+            background-color: #6b7280;
+        }
+        #stock-table td {
+            padding: 12px;
+        }
+        #stock-table button {
+            padding: 10px 16px;
+            font-size: 1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            color: white;
+        }
+        #stock-table button:hover {
+            opacity: 0.9;
+        }
+        #stock-table button.buy {
+            background-color: #48bb78;
+        }
+        #stock-table button.buy:hover {
+            background-color: #38a169;
+        }
+        #stock-table button.sell {
+            background-color: #f56565;
+        }
+        #stock-table button.sell:hover {
+            background-color: #e53e3e;
+        }
+        .chart-container {
+            background-color: #374151;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            border: 1px solid #4a5568;
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        #transaction-history {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #transaction-history li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #4a5568;
+            border-radius: 4px;
+            border: 1px solid #718096;
+            font-size: 0.9em;
+            color: #e2e8f0;
+        }
+        #transaction-history li:last-child {
+            border-bottom: none;
+        }
+        .ui-widget-header {
+            background: #4a5568;
+            color: #cbd5e0;
+            border: 1px solid #718096;
+        }
+        .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+            background: #374151;
+            color: #e2e8f0;
+            border: 1px solid #718096;
+        }
+        .ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+            background: #6b7280;
+            color: #f7fafc;
+            border: 1px solid #718096;
+        }
+        .ui-widget-content {
+            color: #e2e8f0;
+        }
+        .chart-type-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .chart-type-button {
+            padding: 10px 15px;
+            margin: 0 5px;
+            background-color: #4a5568;
+            color: #cbd5e0;
+            border: 1px solid #718096;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 0.9em;
+        }
+        .chart-type-button:hover {
+            background-color: #6b7280;
+            opacity: 0.9;
+        }
+        .chart-type-button.active {
+            background-color: #63b3ed;
+            color: #f7fafc;
+            border-color: #63b3ed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulateur de Trading</h1>
 
+        <div class="panels">
+            <div id="portfolio-panel" class="panel">
+                <h2>Votre Portfolio</h2>
+                <p>Argent disponible: <span id="cash">10000</span> €</p>
+                <ul id="holdings"></ul>
+            </div>
+
+            <div id="market-panel" class="panel">
+                <h2>Marché Boursier</h2>
+                <div class="chart-type-buttons">
+                    <button class="chart-type-button" data-type="line">Graphique en ligne</button>
+                    <button class="chart-type-button" data-type="candlestick">Graphique en chandelier</button>
+                    <button class="chart-type-button" data-type="ohlc">Graphique OHLC</button>
+                    <button class="chart-type-button" data-type="bar">Graphique en barre</button>
+                </div>
+                <table id="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Prix</th>
+                            <th>Volume</th>
+                            <th>Variation (24h)</th>
+                            <th>Acheter</th>
+                            <th>Vendre</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-list"></tbody>
+                </table>
+                <div class="chart-container">
+                    <canvas id="stock-chart"></canvas>
+                </div>
+            </div>
+
+            <div id="transactions-panel" class="panel">
+                <h2>Historique des Transactions</h2>
+                <ul id="transaction-history"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cashElement = document.getElementById('cash');
+    const holdingsList = document.getElementById('holdings');
+    const stockListBody = document.getElementById('stock-list');
+    const transactionHistory = document.getElementById('transaction-history');
+    const stockChartCtx = document.getElementById('stock-chart').getContext('2d');
+    const chartTypeButtons = document.querySelectorAll('.chart-type-button');
+
+    let cash = 10000;
+    let holdings = {};
+    let stocks = [
+        { symbol: 'AAPL', name: 'Apple Inc.', price: 150, volume: 10000, history: [148, 149, 151, 153, 152, 154, 155], sector: 'Technologie' },
+        { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 2500, volume: 5000, history: [2480, 2490, 2510, 2530, 2520, 2540, 2550], sector: 'Technologie' },
+        { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 3200, volume: 7000, history: [3180, 3190, 3210, 3230, 3220, 3240, 3250], sector: 'Commerce' },
+        { symbol: 'TSLA', name: 'Tesla, Inc.', price: 800, volume: 12000, history: [790, 795, 805, 810, 808, 812, 815], sector: 'Automobile' },
+        { symbol: 'MSFT', name: 'Microsoft Corp.', price: 280, volume: 9000, history: [278, 279, 281, 283, 282, 284, 285], sector: 'Technologie' },
+        { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 160, volume: 6000, history: [158, 159, 161, 163, 162, 164, 165], sector: 'Finance' },
+        { symbol: 'V', name: 'Visa Inc.', price: 230, volume: 8000, history: [228, 229, 231, 233, 232, 234, 235], sector: 'Finance' },
+        { symbol: 'JNJ', name: 'Johnson & Johnson', price: 170, volume: 4000, history: [168, 169, 171, 173, 172, 174, 175], sector: 'Santé' },
+        { symbol: 'WMT', name: 'Walmart Inc.', price: 145, volume: 11000, history: [143, 144, 146, 148, 147, 149, 150], sector: 'Commerce' },
+        { symbol: 'PG', name: 'Procter & Gamble', price: 155, volume: 3000, history: [153, 154, 156, 158, 157, 159, 160], sector: 'Consommation' },
+    ];
+    let transactions = [];
+    let chartInstance = null;
+    let selectedStockSymbol = null;
+    let chartType = 'line';
+    let ohlcData = [];
+
+    function updateCashDisplay() {
+        cashElement.textContent = cash.toFixed(2);
+    }
+
+    function updateHoldingsDisplay() {
+        holdingsList.innerHTML = '';
+        for (const symbol in holdings) {
+            const listItem = document.createElement('li');
+            const stock = stocks.find(s => s.symbol === symbol);
+            listItem.textContent = `${stock.name} (${symbol}): ${holdings[symbol]} actions`;
+            holdingsList.appendChild(listItem);
+        }
+    }
+
+    function updateStockList() {
+        stockListBody.innerHTML = '';
+        stocks.forEach(stock => {
+            const row = document.createElement('tr');
+            const priceFluctuation = (Math.random() - 0.5) * 0.02;
+            stock.price = Math.max(1, stock.price * (1 + priceFluctuation));
+            stock.history.push(stock.price);
+            if (stock.history.length > 30) {
+                stock.history.shift();
+            }
+
+            const symbolCell = document.createElement('td');
+            symbolCell.textContent = stock.symbol;
+
+            const priceCell = document.createElement('td');
+            priceCell.textContent = stock.price.toFixed(2) + ' €';
+
+            const volumeCell = document.createElement('td');
+            volumeCell.textContent = stock.volume;
+
+            const change24h = (stock.history[stock.history.length - 1] - stock.history[stock.history.length - 2]) / stock.history[stock.history.length - 2] * 100;
+            const changeCell = document.createElement('td');
+            changeCell.textContent = change24h.toFixed(2) + '%';
+            changeCell.style.color = change24h > 0 ? 'green' : 'red';
+
+            const buyButtonCell = document.createElement('td');
+            const buyButton = document.createElement('button');
+            buyButton.textContent = 'Acheter';
+            buyButton.addEventListener('click', () => buyStock(stock));
+            buyButtonCell.appendChild(buyButton);
+
+            const sellButtonCell = document.createElement('td');
+            const sellButton = document.createElement('button');
+            sellButton.textContent = 'Vendre';
+            sellButton.classList.add('sell');
+            sellButton.addEventListener('click', () => sellStock(stock));
+            sellButtonCell.appendChild(sellButton);
+
+            row.appendChild(symbolCell);
+            row.appendChild(priceCell);
+            row.appendChild(volumeCell);
+            row.appendChild(changeCell);
+            row.appendChild(buyButtonCell);
+            row.appendChild(sellButtonCell);
+            stockListBody.appendChild(row);
+            row.addEventListener('click', () => {
+                selectedStockSymbol = stock.symbol;
+                updateChart(selectedStockSymbol);
+            });
+        });
+        if (selectedStockSymbol) {
+            updateChart(selectedStockSymbol);
+        }
+    }
+
+    function buyStock(stock) {
+        const quantity = parseInt(prompt(`Combien d'actions de ${stock.name} (${stock.symbol}) souhaitez-vous acheter ?`), 10);
+        if (!isNaN(quantity) && quantity > 0) {
+            const cost = quantity * stock.price;
+            if (cash >= cost) {
+                cash -= cost;
+                holdings[stock.symbol] = (holdings[stock.symbol] || 0) + quantity;
+                transactions.push({ type: 'Achat', symbol: stock.symbol, quantity: quantity, price: stock.price });
+                updateCashDisplay();
+                updateHoldingsDisplay();
+                updateTransactionHistory();
+                stock.volume += quantity;
+                stock.price *= (1 + 0.0001 * quantity);
+            } else {
+                alert('Fonds insuffisants.');
+            }
+        } else {
+            alert('Veuillez entrer une quantité valide.');
+        }
+    }
+
+    function sellStock(stock) {
+        if (holdings[stock.symbol] > 0) {
+            const quantity = parseInt(prompt(`Combien d'actions de ${stock.name} (${stock.symbol}) souhaitez-vous vendre ? Vous en possédez ${holdings[stock.symbol]}.`), 10);
+            if (!isNaN(quantity) && quantity > 0 && quantity <= holdings[stock.symbol]) {
+                const revenue = quantity * stock.price;
+                cash += revenue;
+                holdings[stock.symbol] -= quantity;
+                if (holdings[stock.symbol] === 0) {
+                    delete holdings[stock.symbol];
+                }
+                transactions.push({ type: 'Vente', symbol: stock.symbol, quantity: quantity, price: stock.price });
+                updateCashDisplay();
+                updateHoldingsDisplay();
+                updateTransactionHistory();
+                stock.volume -= quantity;
+                stock.price *= (1 - 0.00005 * quantity);
+            } else {
+                alert(`Veuillez entrer une quantité valide (maximum ${holdings[stock.symbol]}).`);
+            }
+        } else {
+            alert(`Vous ne possédez pas d'actions de ${stock.name} (${stock.symbol}).`);
+        }
+    }
+
+    function updateTransactionHistory() {
+        transactionHistory.innerHTML = '';
+        transactions.slice(-5).forEach(transaction => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${transaction.type} de ${transaction.quantity} ${transaction.symbol} à ${transaction.price.toFixed(2)} €`;
+            transactionHistory.appendChild(listItem);
+        });
+    }
+
+    function initChart(symbol, type = 'line') {
+        const stock = stocks.find(s => s.symbol === symbol);
+        if (!stock) return;
+
+        selectedStockSymbol = symbol;
+        chartType = type;
+
+        if (type === 'candlestick' || type === 'ohlc' || type === 'bar') {
+            ohlcData = stock.history.map((price, index) => {
+                const open = stock.history[Math.max(0, index - 1)] || price;
+                const high = Math.max(open, price);
+                const low = Math.min(open, price);
+                return {
+                    x: `-${stock.history.length - 1 - index}s`,
+                    open: open.toFixed(2),
+                    high: high.toFixed(2),
+                    low: low.toFixed(2),
+                    close: price.toFixed(2)
+                };
+            });
+        }
+
+        const data = {
+            labels: Array.from({ length: stock.history.length }, (_, i) => `-${stock.history.length - 1 - i}s`),
+            datasets: [{
+                label: stock.name,
+                data: type === 'line' ? stock.history :
+                      type === 'candlestick' || type === 'ohlc' || type === 'bar' ? ohlcData : stock.history,
+                borderColor: '#63b3ed',
+                backgroundColor: type === 'bar' ? '#63b3ed' : undefined,
+                fill: false,
+                pointRadius: 0,
+                type: type === 'line' ? 'line' :
+                      type === 'candlestick' ? 'candlestick' :
+                      type === 'ohlc' ? 'ohlc' :
+                      type === 'bar' ? 'bar' : 'line',
+                barPercentage: type === 'bar' ? 0.8 : undefined,
+                categoryPercentage: type === 'bar' ? 0.8 : undefined,
+            }]
+        };
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(stockChartCtx, {
+            type: type,
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        display: false,
+                        grid: {
+                            color: '#718096'
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function (value) {
+                                return value + '€';
+                            },
+                            color: '#a0aec0'
+                        },
+                        grid: {
+                            color: '#718096'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                },
+                tooltip: {
+                    backgroundColor: '#4a5568',
+                    titleColor: '#f7fafc',
+                    bodyColor: '#e2e8f0',
+                    borderColor: '#718096',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(2) + '€';
+                            }
+                            if (type === 'candlestick' || type === 'ohlc' || type === 'bar') {
+                                label += `
+Open: ${context.parsed.open}€
+High: ${context.parsed.high}€
+Low: ${context.parsed.low}€
+Close: ${context.parsed.close}€`;
+                            }
+                            return label;
+                        }
+                    }
+                },
+            }
+        });
+    }
+
+    function updateChart(symbol) {
+        const stock = stocks.find(s => s.symbol === symbol);
+        if (!stock || !chartInstance) return;
+
+        if (chartType === 'candlestick' || chartType === 'ohlc' || chartType === 'bar') {
+            ohlcData = stock.history.map((price, index) => {
+                const open = stock.history[Math.max(0, index - 1)] || price;
+                const high = Math.max(open, price);
+                const low = Math.min(open, price);
+                return {
+                    x: `-${stock.history.length - 1 - index}s`,
+                    open: open.toFixed(2),
+                    high: high.toFixed(2),
+                    low: low.toFixed(2),
+                    close: price.toFixed(2)
+                };
+            });
+            chartInstance.data.datasets[0].data = ohlcData;
+        } else {
+            chartInstance.data.labels = Array.from({ length: stock.history.length }, (_, i) => `-${stock.history.length - 1 - i}s`);
+            chartInstance.data.datasets[0].data = stock.history;
+            chartInstance.data.datasets[0].label = stock.name;
+        }
+        chartInstance.options.type = chartType;
+        chartInstance.data.datasets[0].type = chartType === 'line' ? 'line' :
+                                              chartType === 'candlestick' ? 'candlestick' :
+                                              chartType === 'ohlc' ? 'ohlc' :
+                                              chartType === 'bar' ? 'bar' : 'line';
+        chartInstance.update();
+    }
+
+    stocks.forEach(stock => {
+        if (!selectedStockSymbol) {
+            selectedStockSymbol = stock.symbol;
+        }
+    });
+
+    setInterval(updateStockList, 1000);
+
+    updateCashDisplay();
+    updateHoldingsDisplay();
+    updateStockList();
+    updateTransactionHistory();initChart(selectedStockSymbol, chartType);
+
+    $( ".panel" ).draggable({
+        containment: "parent",
+        cursor: "move",
+        handle: "h2"
+    });
+    $( ".panel" ).resizable({
+        minHeight: 200,
+        minWidth: 300
+    });
+
+    chartTypeButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const type = event.target.dataset.type;
+            chartType = type;
+            chartTypeButtons.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateChart(selectedStockSymbol);
+        });
+    });
+    document.querySelector(`[data-type="${chartType}"]`).classList.add('active');
+});
+</script>
+</body>
+</html>
